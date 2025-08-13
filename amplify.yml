@@ -1,9 +1,14 @@
 version: 1
-applications:
-  - frontend:
-      phases:
-        build:
-          commands: []
-        test:
-          commands: []
-    appRoot: /
+frontend:
+  phases:
+    build:
+      commands:
+        - npm install
+        - npm run build
+  artifacts:
+    baseDirectory: /
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
