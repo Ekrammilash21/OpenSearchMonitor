@@ -1,0 +1,9 @@
+{
+  "name": "opensearch-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {},
+  "scripts": {
+    "build": "echo 'Build step completed'"
+  }
+}
