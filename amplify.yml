@@ -1,16 +1,10 @@
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - npm install
     build:
       commands:
-        - npm run build
+        - echo "Build started"
   artifacts:
     baseDirectory: /
     files:
       - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
