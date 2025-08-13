@@ -1,0 +1,2 @@
+# OpenSearchMonitor
+OpenSearch Monitoring App
