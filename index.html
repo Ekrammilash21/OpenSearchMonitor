@@ -405,7 +405,6 @@
             
             if (!message) return;
             
-            // Disable input and button while processing
             userInput.disabled = true;
             sendButton.disabled = true;
             
@@ -415,6 +414,7 @@
             showTypingIndicator();
             
             try {
+                console.log('Sending message to Lex:', message);
                 const response = await lexRuntime.recognizeText({
                     botId: BOT_CONFIG.botId,
                     botAliasId: BOT_CONFIG.botAliasId,
@@ -423,23 +423,28 @@
                     text: message
                 }).promise();
                 
+                console.log('Received response from Lex:', response);
+                
                 hideTypingIndicator();
                 
                 if (response.messages && response.messages.length > 0) {
                     response.messages.forEach(msg => {
                         addMessage(msg.content);
                     });
+                } else {
+                    addMessage('No response received from the bot.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error details:', error);
                 hideTypingIndicator();
-                addMessage('Sorry, I encountered an error. Please try again.');
+                addMessage(`Error: ${error.message || 'Unknown error occurred'}`);
             } finally {
-                // Re-enable input and button
                 userInput.disabled = false;
                 sendButton.disabled = false;
                 userInput.focus();
-            }
+    }
+}
+
         }
 
         // Event Listeners
