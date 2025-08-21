@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenSearch Assistant</title>
-    <!-- AWS SDK -->
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.955.0.min.js"></script>
-    <!-- Google Font -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+    <script src="https://unpkg.com/amazon-cognito-identity-js@6.3.1/dist/amazon-cognito-identity.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -95,18 +94,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-            70% {
-                transform: scale(2);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 0;
-            }
+            0% { transform: scale(1); opacity: 0.8; }
+            70% { transform: scale(2); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
         }
 
         #chatbox {
@@ -119,19 +109,6 @@
             gap: 16px;
         }
 
-        #chatbox::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #chatbox::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        #chatbox::-webkit-scrollbar-thumb {
-            background: #cfd8dc;
-            border-radius: 3px;
-        }
-
         .message {
             max-width: 70%;
             padding: 14px 18px;
@@ -142,14 +119,8 @@
         }
 
         @keyframes messageAppear {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .user-message {
@@ -243,27 +214,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .dot {
-            width: 4px;
-            height: 4px;
-            background: #666;
-            border-radius: 50%;
-            animation: dotPulse 1.5s infinite;
-        }
-
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes dotPulse {
-            0%, 100% { transform: scale(1); opacity: 0.4; }
-            50% { transform: scale(1.1); opacity: 1; }
-        }
-
         .welcome-message {
             text-align: center;
             color: #666;
@@ -272,21 +222,6 @@
             background: white;
             border-radius: 16px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        @media (max-width: 768px) {
-            .chat-container {
-                height: 100vh;
-                border-radius: 0;
-            }
-
-            body {
-                padding: 0;
-            }
-
-            .message {
-                max-width: 85%;
-            }
         }
     </style>
 </head>
@@ -299,7 +234,7 @@
             </div>
             <div class="connection-status">
                 <div class="status-dot"></div>
-                <span>Connected</span>
+                <span>Connecting...</span>
             </div>
         </div>
         <div id="chatbox">
@@ -324,21 +259,49 @@
     </div>
 
     <script>
-        // Your Lex bot configuration
+        // AWS Configuration for Isengard
+        AWS.config.region = 'us-east-1';
+        
+        // Lex Configuration
         const BOT_CONFIG = {
-            botId: 'RNTBV3K18U', // Your bot ID
-            botAliasId: 'TSTALIASID', // Your bot alias ID
+            botId: '4E0F0SUL8F',
+            botAliasId: 'TSTALIASID',
             localeId: 'en_US'
         };
 
-        // AWS Configuration
-        AWS.config.region = 'us-west-2'; // Your region
-        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'YOUR_IDENTITY_POOL_ID'
-        });
-
-        const lexRuntime = new AWS.LexRuntimeV2();
+        // Initialize Lex client
+        const lexClient = new AWS.LexRuntimeV2();
         let isTyping = false;
+
+        // Update connection status
+        function updateConnectionStatus(isConnected, message = '') {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.querySelector('.connection-status span');
+            
+            statusDot.style.background = isConnected ? '#4CAF50' : '#dc3545';
+            statusText.textContent = message || (isConnected ? 'Connected' : 'Disconnected');
+        }
+
+        // Test connection
+        async function testConnection() {
+            try {
+                const response = await lexClient.recognizeText({
+                    botId: BOT_CONFIG.botId,
+                    botAliasId: BOT_CONFIG.botAliasId,
+                    localeId: BOT_CONFIG.localeId,
+                    sessionId: `test-${Date.now()}`,
+                    text: 'test'
+                }).promise();
+                
+                updateConnectionStatus(true);
+                console.log('Connection test successful');
+                return true;
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                updateConnectionStatus(false, 'Connection Failed');
+                return false;
+            }
+        }
 
         function showTypingIndicator() {
             if (!isTyping) {
@@ -349,9 +312,7 @@
                 indicator.innerHTML = `
                     Assistant is typing
                     <div class="typing-dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
+                        <span>.</span><span>.</span><span>.</span>
                     </div>
                 `;
                 document.getElementById('chatbox').appendChild(indicator);
@@ -414,16 +375,13 @@
             showTypingIndicator();
             
             try {
-                console.log('Sending message to Lex:', message);
-                const response = await lexRuntime.recognizeText({
+                const response = await lexClient.recognizeText({
                     botId: BOT_CONFIG.botId,
                     botAliasId: BOT_CONFIG.botAliasId,
                     localeId: BOT_CONFIG.localeId,
                     sessionId: `session-${Date.now()}`,
                     text: message
                 }).promise();
-                
-                console.log('Received response from Lex:', response);
                 
                 hideTypingIndicator();
                 
@@ -435,16 +393,15 @@
                     addMessage('No response received from the bot.');
                 }
             } catch (error) {
-                console.error('Error details:', error);
+                console.error('Error:', error);
                 hideTypingIndicator();
-                addMessage(`Error: ${error.message || 'Unknown error occurred'}`);
+                addMessage('Sorry, I encountered an error. Please try again.');
+                updateConnectionStatus(false, 'Error');
             } finally {
                 userInput.disabled = false;
                 sendButton.disabled = false;
                 userInput.focus();
-    }
-}
-
+            }
         }
 
         // Event Listeners
@@ -456,8 +413,11 @@
             }
         };
 
-        // Focus input on page load
-        document.getElementById('user-input').focus();
+        // Initialize on page load
+        window.onload = async function() {
+            await testConnection();
+            document.getElementById('user-input').focus();
+        };
     </script>
 </body>
 </html>
