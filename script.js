@@ -65,20 +65,15 @@ async function sendMessage() {
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                // Removed Access-Control-Allow-Origin as it's set in API Gateway
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 
-                message: message,
-                // Add any other required fields here
+            body: JSON.stringify({
+                message: message
             })
         });
 
-        // Add debug logging
-        console.log('Response status:', response.status);
-        
         const data = await response.json();
-        console.log('Response data:', data);
+        console.log('Response:', data); // Debug log
         
         hideTypingIndicator();
         
@@ -94,14 +89,21 @@ async function sendMessage() {
         
         updateConnectionStatus(true);
     } catch (error) {
-        console.error('Detailed error:', error);
+        console.error('Error:', error);
         hideTypingIndicator();
-        addMessage(`Error: ${error.message}`);
+        addMessage('Error connecting to the chatbot. Please try again.');
         updateConnectionStatus(false, 'Connection Error');
     }
 }
 
-// Update test connection function too
+function updateConnectionStatus(isConnected, message = '') {
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.querySelector('.connection-status span');
+    
+    statusDot.style.background = isConnected ? '#4CAF50' : '#dc3545';
+    statusText.textContent = message || (isConnected ? 'Connected' : 'Disconnected');
+}
+
 async function testConnection() {
     try {
         const response = await fetch(API_ENDPOINT, {
@@ -112,23 +114,18 @@ async function testConnection() {
             body: JSON.stringify({ message: 'test' })
         });
         
-        console.log('Test response status:', response.status);
-        const data = await response.json();
-        console.log('Test response data:', data);
-        
         if (response.ok) {
             updateConnectionStatus(true, 'Connected');
             return true;
         } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('API response not OK');
         }
     } catch (error) {
         console.error('Connection test failed:', error);
-        updateConnectionStatus(false, `Connection Failed: ${error.message}`);
+        updateConnectionStatus(false, 'Connection Failed');
         return false;
     }
 }
-
 
 // Event Listeners
 document.getElementById('send-button').onclick = sendMessage;
