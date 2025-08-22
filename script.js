@@ -65,12 +65,21 @@ async function sendMessage() {
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                // Removed Access-Control-Allow-Origin as it's set in API Gateway
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ 
+                message: message,
+                // Add any other required fields here
+            })
         });
 
+        // Add debug logging
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
+        console.log('Response data:', data);
+        
         hideTypingIndicator();
         
         if (data.messages && data.messages.length > 0) {
@@ -85,21 +94,14 @@ async function sendMessage() {
         
         updateConnectionStatus(true);
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Detailed error:', error);
         hideTypingIndicator();
-        addMessage(`Error: Unable to connect to the chatbot`);
+        addMessage(`Error: ${error.message}`);
         updateConnectionStatus(false, 'Connection Error');
     }
 }
 
-function updateConnectionStatus(isConnected, message = '') {
-    const statusDot = document.querySelector('.status-dot');
-    const statusText = document.querySelector('.connection-status span');
-    
-    statusDot.style.background = isConnected ? '#4CAF50' : '#dc3545';
-    statusText.textContent = message || (isConnected ? 'Connected' : 'Disconnected');
-}
-
+// Update test connection function too
 async function testConnection() {
     try {
         const response = await fetch(API_ENDPOINT, {
@@ -110,19 +112,23 @@ async function testConnection() {
             body: JSON.stringify({ message: 'test' })
         });
         
+        console.log('Test response status:', response.status);
+        const data = await response.json();
+        console.log('Test response data:', data);
+        
         if (response.ok) {
             updateConnectionStatus(true, 'Connected');
-            console.log('Connection test successful');
             return true;
         } else {
-            throw new Error('Connection test failed');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
     } catch (error) {
         console.error('Connection test failed:', error);
-        updateConnectionStatus(false, 'Connection Failed');
+        updateConnectionStatus(false, `Connection Failed: ${error.message}`);
         return false;
     }
 }
+
 
 // Event Listeners
 document.getElementById('send-button').onclick = sendMessage;
