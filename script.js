@@ -1,150 +1,55 @@
-// Chat configuration
+// API endpoint
 const API_ENDPOINT = 'https://h86p4meli0.execute-api.us-east-1.amazonaws.com/4aay7cr';
 
-let isTyping = false;
-
-function showTypingIndicator() {
-    if (!isTyping) {
-        isTyping = true;
-        const indicator = document.createElement('div');
-        indicator.className = 'typing-indicator';
-        indicator.id = 'typing-indicator';
-        indicator.textContent = 'Assistant is typing...';
-        document.getElementById('chatbox').appendChild(indicator);
-        scrollToBottom();
-    }
-}
-
-function hideTypingIndicator() {
-    const indicator = document.getElementById('typing-indicator');
-    if (indicator) {
-        indicator.remove();
-    }
-    isTyping = false;
-}
-
-function scrollToBottom() {
-    const chatbox = document.getElementById('chatbox');
-    chatbox.scrollTop = chatbox.scrollHeight;
-}
-
-function formatTimestamp() {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function addMessage(content, isUser = false) {
+// Add a message to the chatbox
+function addMessage(text, isUser) {
     const chatbox = document.getElementById('chatbox');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-    
-    const messageContent = document.createElement('div');
-    messageContent.textContent = content;
-    
-    const timestamp = document.createElement('div');
-    timestamp.className = 'timestamp';
-    timestamp.textContent = formatTimestamp();
-    
-    messageDiv.appendChild(messageContent);
-    messageDiv.appendChild(timestamp);
+    messageDiv.textContent = text;
     chatbox.appendChild(messageDiv);
-    scrollToBottom();
+    chatbox.scrollTop = chatbox.scrollHeight;
 }
 
+// Send message to the bot
 async function sendMessage() {
-    const userInput = document.getElementById('user-input');
-    const message = userInput.value.trim();
-    
+    const input = document.getElementById('user-input');
+    const message = input.value.trim();
+
     if (!message) return;
-    
-    userInput.value = '';
+
+    // Add user message to chat
     addMessage(message, true);
-    
-    showTypingIndicator();
-    
+    input.value = '';
+
     try {
+        // Send message to API
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                message: message
-            })
+            body: JSON.stringify({ message: message })
         });
 
         const data = await response.json();
-        console.log('Response:', data); // Debug log
         
-        hideTypingIndicator();
-        
-        if (data.messages && data.messages.length > 0) {
-            data.messages.forEach(msg => {
-                addMessage(msg.content || msg);
-            });
-        } else if (data.message) {
-            addMessage(data.message);
+        // Add bot response to chat
+        if (data.message) {
+            addMessage(data.message, false);
         } else {
-            addMessage('No response received from the bot.');
+            addMessage('No response from bot.', false);
         }
-        
-        updateConnectionStatus(true);
+
     } catch (error) {
         console.error('Error:', error);
-        hideTypingIndicator();
-        addMessage('Error connecting to the chatbot. Please try again.');
-        updateConnectionStatus(false, 'Connection Error');
+        addMessage('Error connecting to the bot.', false);
     }
 }
 
-function updateConnectionStatus(isConnected, message = '') {
-    const statusDot = document.querySelector('.status-dot');
-    const statusText = document.querySelector('.connection-status span');
-    
-    statusDot.style.background = isConnected ? '#4CAF50' : '#dc3545';
-    statusText.textContent = message || (isConnected ? 'Connected' : 'Disconnected');
-}
-
-async function testConnection() {
-    try {
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: 'test' })
-        });
-        
-        if (response.ok) {
-            updateConnectionStatus(true, 'Connected');
-            return true;
-        } else {
-            throw new Error('API response not OK');
-        }
-    } catch (error) {
-        console.error('Connection test failed:', error);
-        updateConnectionStatus(false, 'Connection Failed');
-        return false;
-    }
-}
-
-// Event Listeners
-document.getElementById('send-button').onclick = sendMessage;
-document.getElementById('user-input').onkeypress = function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
+// Handle Enter key
+document.getElementById('user-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
         sendMessage();
     }
-};
-
-// Initialize on page load
-window.onload = async function() {
-    try {
-        updateConnectionStatus(false, 'Initializing...');
-        await testConnection();
-        document.getElementById('user-input').focus();
-    } catch (error) {
-        console.error('Initialization failed:', error);
-        updateConnectionStatus(false, 'Connection Failed');
-        addMessage('Failed to connect to the bot. Please try refreshing the page.');
-    }
-};
+});
