@@ -1,41 +1,6 @@
-// Your Lex bot configuration
-const BOT_CONFIG = {
-    botId: 'RNTBV3K18U',
-    botAliasId: 'TSTALIASID',
-    localeId: 'en_US'
-};
+// Chat configuration
+const API_ENDPOINT = 'https://h86p4meli0.execute-api.us-east-1.amazonaws.com/4aay7cr';
 
-// AWS Configuration for Isengard
-AWS.config.region = 'us-west-2';
-
-// Initialize Lex client with role assumption
-async function initializeLexClient() {
-    try {
-        // Assume the Isengard role
-        const sts = new AWS.STS();
-        const roleToAssume = {
-            RoleArn: `arn:aws:iam::564175165855:role/Admin/ekrammil-Isengard`,
-            RoleSessionName: 'ChatbotSession'
-        };
-
-        const assumedRole = await sts.assumeRole(roleToAssume).promise();
-        
-        // Create Lex client with assumed role credentials
-        return new AWS.LexRuntimeV2({
-            region: 'us-west-2',
-            credentials: new AWS.Credentials(
-                assumedRole.Credentials.AccessKeyId,
-                assumedRole.Credentials.SecretAccessKey,
-                assumedRole.Credentials.SessionToken
-            )
-        });
-    } catch (error) {
-        console.error('Failed to initialize Lex client:', error);
-        throw error;
-    }
-}
-
-let lexRuntime;
 let isTyping = false;
 
 function showTypingIndicator() {
@@ -89,7 +54,7 @@ async function sendMessage() {
     const userInput = document.getElementById('user-input');
     const message = userInput.value.trim();
     
-    if (!message || !lexRuntime) return;
+    if (!message) return;
     
     userInput.value = '';
     addMessage(message, true);
@@ -97,27 +62,32 @@ async function sendMessage() {
     showTypingIndicator();
     
     try {
-        const response = await lexRuntime.recognizeText({
-            botId: BOT_CONFIG.botId,
-            botAliasId: BOT_CONFIG.botAliasId,
-            localeId: BOT_CONFIG.localeId,
-            sessionId: `session-${Date.now()}`,
-            text: message
-        }).promise();
-        
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
         hideTypingIndicator();
         
-        if (response.messages && response.messages.length > 0) {
-            response.messages.forEach(msg => {
-                addMessage(msg.content);
+        if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(msg => {
+                addMessage(msg.content || msg);
             });
+        } else if (data.message) {
+            addMessage(data.message);
         } else {
             addMessage('No response received from the bot.');
         }
+        
+        updateConnectionStatus(true);
     } catch (error) {
         console.error('Error:', error);
         hideTypingIndicator();
-        addMessage(`Error: ${error.message || 'An unknown error occurred'}`);
+        addMessage(`Error: Unable to connect to the chatbot`);
         updateConnectionStatus(false, 'Connection Error');
     }
 }
@@ -131,23 +101,22 @@ function updateConnectionStatus(isConnected, message = '') {
 }
 
 async function testConnection() {
-    if (!lexRuntime) {
-        updateConnectionStatus(false, 'Not Connected');
-        return false;
-    }
-
     try {
-        const response = await lexRuntime.recognizeText({
-            botId: BOT_CONFIG.botId,
-            botAliasId: BOT_CONFIG.botAliasId,
-            localeId: BOT_CONFIG.localeId,
-            sessionId: `test-${Date.now()}`,
-            text: 'test'
-        }).promise();
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: 'test' })
+        });
         
-        updateConnectionStatus(true, 'Connected');
-        console.log('Connection test successful');
-        return true;
+        if (response.ok) {
+            updateConnectionStatus(true, 'Connected');
+            console.log('Connection test successful');
+            return true;
+        } else {
+            throw new Error('Connection test failed');
+        }
     } catch (error) {
         console.error('Connection test failed:', error);
         updateConnectionStatus(false, 'Connection Failed');
@@ -168,13 +137,11 @@ document.getElementById('user-input').onkeypress = function(e) {
 window.onload = async function() {
     try {
         updateConnectionStatus(false, 'Initializing...');
-        lexRuntime = await initializeLexClient();
         await testConnection();
         document.getElementById('user-input').focus();
     } catch (error) {
         console.error('Initialization failed:', error);
-        updateConnectionStatus(false, 'Authentication Failed');
+        updateConnectionStatus(false, 'Connection Failed');
         addMessage('Failed to connect to the bot. Please try refreshing the page.');
     }
 };
-
