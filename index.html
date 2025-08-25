@@ -3,89 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chatbot</title>
+    <title>OpenSearch Troubleshooting Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #232f3e;
+            --secondary-color: #ff9900;
+            --warning-color: #ff9900;
+            --danger-color: #ff4444;
+            --success-color: #00cc00;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            background-color: #f5f5f5;
+            line-height: 1.6;
+            background-color: var(--background-color);
         }
 
-        .chat-container {
-            width: 400px;
-            height: 600px;
-            background: white;
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links li a:hover {
+            color: var(--secondary-color);
+        }
+
+        .hero {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--primary-color);
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-background);
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
-        #chatbox {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
+        .card-header i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
         }
 
-        .message {
-            margin: 10px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 70%;
+        .yellow-alert {
+            border-left: 5px solid var(--warning-color);
         }
 
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            margin-left: auto;
+        .yellow-alert i {
+            color: var(--warning-color);
         }
 
-        .bot-message {
-            background-color: #e9ecef;
-            margin-right: auto;
+        .red-alert {
+            border-left: 5px solid var(--danger-color);
         }
 
-        .input-area {
-            padding: 20px;
-            border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
+        .red-alert i {
+            color: var(--danger-color);
         }
 
-        #user-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
+        .command-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .command-card {
+            background: var(--card-background);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 1rem;
             border-radius: 5px;
-            outline: none;
+            overflow-x: auto;
+            margin: 1rem 0;
         }
 
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
+        code {
+            font-family: monospace;
+            color: #d63384;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        footer {
+            background-color: var(--primary-color);
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                margin-top: 1rem;
+            }
+            
+            .hero {
+                padding: 6rem 1rem 3rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div id="chatbox"></div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Type a message...">
-            <button onclick="sendMessage()">Send</button>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">OpenSearch Guide</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#alerts">Alerts</a></li>
+                <li><a href="#commands">Commands</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ul>
         </div>
-    </div>
-    <script src="script.js"></script>
+    </nav>
+
+    <header class="hero" id="home">
+        <div class="hero-content">
+            <h1>OpenSearch Troubleshooting Guide</h1>
+            <p>Comprehensive solutions for common OpenSearch challenges</p>
+        </div>
+    </header>
+
+    <main>
+        <section id="alerts">
+            <h2 class="section-title">Alert Status Guide</h2>
+            <div class="card-container">
+                <div class="card yellow-alert">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Yellow Cluster Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <h4>Common Causes:</h4>
+                        <ul>
+                            <li>Unassigned replica shards</li>
+                            <li>Node capacity issues</li>
+                            <li>Network connectivity problems</li>
+                        </ul>
+                        <h4>Solution Steps:</h4>
+                        <ol>
+                            <li>Check unassigned shards</li>
+                            <li>Verify node capacity</li>
+                            <li>Review cluster settings</li>
+                            <li>Monitor disk space</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card red-alert">
+                    <div class="card-header">
+                        <i class="fas fa-times-circle"></i>
+                        <h3>Red Cluster Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <h4>Common Causes:</h4>
+                        <ul>
+                            <li>Primary shard failures</li>
+                            <li>Node failures</li>
+                            <li>Disk space issues</li>
+                        </ul>
+                        <h4>Solution Steps:</h4>
+                        <ol>
+                            <li>Check node availability</li>
+                            <li>Verify master node status</li>
+                            <li>Review error logs</li>
+                            <li>Check disk space</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="commands">
+            <h2 class="section-title">Essential Commands</h2>
+            <div class="command-container">
+                <div class="command-card">
+                    <h3>Cluster Health Check</h3>
+                    <pre><code>GET _cluster/health</code></pre>
+                    <p>Shows overall cluster status and shard information</p>
+                </div>
+                <div class="command-card">
+                    <h3>Index Status</h3>
+                    <pre><code>GET _cat/indices</code></pre>
+                    <p>Lists all indices with their status and basic info</p>
+                </div>
+                <div class="command-card">
+                    <h3>Shard Allocation</h3>
+                    <pre><code>GET _cat/shards</code></pre>
+                    <p>Shows detailed shard allocation across nodes</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 OpenSearch Guide. Created for AWS OpenSearch Support</p>
+    </footer>
 </body>
 </html>
-
