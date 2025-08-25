@@ -1,55 +1,162 @@
-// API endpoint
-const API_ENDPOINT = 'https://h86p4meli0.execute-api.us-east-1.amazonaws.com/4aay7cr';
+// script.js
 
-// Add a message to the chatbox
-function addMessage(text, isUser) {
-    const chatbox = document.getElementById('chatbox');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-    messageDiv.textContent = text;
-    chatbox.appendChild(messageDiv);
-    chatbox.scrollTop = chatbox.scrollHeight;
-}
-
-// Send message to the bot
-async function sendMessage() {
-    const input = document.getElementById('user-input');
-    const message = input.value.trim();
-
-    if (!message) return;
-
-    // Add user message to chat
-    addMessage(message, true);
-    input.value = '';
-
-    try {
-        // Send message to API
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: message })
+// Wait for the document to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
         });
+    });
 
-        const data = await response.json();
+    // Command copy functionality
+    document.querySelectorAll('pre code').forEach(block => {
+        // Create copy button
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
         
-        // Add bot response to chat
-        if (data.message) {
-            addMessage(data.message, false);
-        } else {
-            addMessage('No response from bot.', false);
-        }
+        // Add button to pre element
+        block.parentNode.appendChild(button);
 
-    } catch (error) {
-        console.error('Error:', error);
-        addMessage('Error connecting to the bot.', false);
+        // Add click handler
+        button.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(block.textContent);
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                // Reset button text after 2 seconds
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                button.textContent = 'Failed to copy';
+            }
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     }
+
+    // Add expand/collapse functionality for solution steps
+    document.querySelectorAll('.card-content').forEach(content => {
+        const header = content.previousElementSibling;
+        if (header) {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => {
+                content.classList.toggle('collapsed');
+                header.classList.toggle('collapsed');
+            });
+        }
+    });
+
+    // Add tooltips for commands
+    document.querySelectorAll('.command-card pre').forEach(command => {
+        command.setAttribute('title', 'Click to copy command');
+    });
+
+    // Add dynamic status indicator
+    function updateStatusIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'status-indicator';
+        indicator.innerHTML = `
+            <div class="status-dot online"></div>
+            <span>Guide Status: Online</span>
+        `;
+        document.querySelector('.hero-content').appendChild(indicator);
+    }
+    updateStatusIndicator();
+
+    // Add animation for cards on scroll
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.card').forEach(card => {
+        observer.observe(card);
+        card.classList.add('fade-in');
+    });
+});
+
+// Add to your CSS (in index.html style section):
+/*
+.copy-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding: 5px 10px;
+    background: #232f3e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
 }
 
-// Handle Enter key
-document.getElementById('user-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
+.copy-button.copied {
+    background: #00cc00;
+}
+
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background: #00cc00;
+    box-shadow: 0 0 8px #00cc00;
+}
+
+pre {
+    position: relative;
+}
+*/
