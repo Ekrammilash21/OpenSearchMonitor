@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenSearch Clusters Troubleshooting Guide & Documentation</title>
+    <title>OpenSearch Troubleshooting Guide & Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -178,7 +178,6 @@
             margin-top: 2rem;
         }
 
-        /* New Architecture Styles */
         .architecture-section {
             padding: 2rem 0;
         }
@@ -236,6 +235,32 @@
             margin: 1.5rem 0 1rem 0;
         }
 
+        .disclaimer-banner {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            margin: 20px auto;
+            max-width: 1200px;
+            border-radius: 5px;
+        }
+
+        .disclaimer-content {
+            padding: 15px;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .disclaimer-content i {
+            color: #856404;
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+
+        .disclaimer-content p {
+            margin: 0;
+            color: #856404;
+        }
+
         @media (max-width: 768px) {
             .nav-content {
                 flex-direction: column;
@@ -251,8 +276,7 @@
             }
         }
     </style>
-</head>
-<body>
+    <body>
     <nav class="navbar">
         <div class="nav-content">
             <div class="logo">Technical Guide</div>
@@ -273,15 +297,82 @@
         </div>
     </header>
 
+    <div class="disclaimer-banner">
+        <div class="disclaimer-content">
+            <i class="fas fa-info-circle"></i>
+            <p><strong>Important Note:</strong> This guide and the associated chatbot provide troubleshooting guidelines only. They do not automatically fix cluster issues. All recommended actions require manual verification and implementation by a qualified administrator.</p>
+        </div>
+    </div>
+
     <main>
         <section id="alerts">
-            <!-- Your existing alerts section content -->
-            [Previous alerts content remains the same]
+            <h2 class="section-title">Alert Status Guide</h2>
+            <div class="card-container">
+                <div class="card yellow-alert">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Yellow Cluster Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <h4>Common Causes:</h4>
+                        <ul>
+                            <li>Unassigned replica shards</li>
+                            <li>Node capacity issues</li>
+                            <li>Network connectivity problems</li>
+                        </ul>
+                        <h4>Solution Steps:</h4>
+                        <ol>
+                            <li>Check unassigned shards</li>
+                            <li>Verify node capacity</li>
+                            <li>Review cluster settings</li>
+                            <li>Monitor disk space</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card red-alert">
+                    <div class="card-header">
+                        <i class="fas fa-times-circle"></i>
+                        <h3>Red Cluster Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <h4>Common Causes:</h4>
+                        <ul>
+                            <li>Primary shard failures</li>
+                            <li>Node failures</li>
+                            <li>Disk space issues</li>
+                        </ul>
+                        <h4>Solution Steps:</h4>
+                        <ol>
+                            <li>Check node availability</li>
+                            <li>Verify master node status</li>
+                            <li>Review error logs</li>
+                            <li>Check disk space</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section id="commands">
-            <!-- Your existing commands section content -->
-            [Previous commands content remains the same]
+            <h2 class="section-title">Essential Commands</h2>
+            <div class="command-container">
+                <div class="command-card">
+                    <h3>Cluster Health Check</h3>
+                    <pre><code>GET _cluster/health</code></pre>
+                    <p>Shows overall cluster status and shard information</p>
+                </div>
+                <div class="command-card">
+                    <h3>Index Status</h3>
+                    <pre><code>GET _cat/indices</code></pre>
+                    <p>Lists all indices with their status and basic info</p>
+                </div>
+                <div class="command-card">
+                    <h3>Shard Allocation</h3>
+                    <pre><code>GET _cat/shards</code></pre>
+                    <p>Shows detailed shard allocation across nodes</p>
+                </div>
+            </div>
         </section>
 
         <section id="architecture" class="architecture-section">
@@ -301,8 +392,7 @@
         │            ┌──────────────┐            │
         └───────────▶│   Amplify    │◀───────────┘
                      │  (This Doc)   │
-                     └──────────────┘
-                        </pre>
+                     └──────────────┘</pre>
                     </div>
                     <div class="architecture-details">
                         <h4>Components Used:</h4>
@@ -345,3 +435,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+</head>
